@@ -1,5 +1,8 @@
 ---
-title: 'Modelling: Resampling and Monte Carlo simulation'
+title: |   
+    |     Using Bootstrapping and
+    |     Monte Carlo simulation
+    |     to obtain model parameters
 author: "Andrew"
 date: "11 September 2017"
 output:
@@ -13,22 +16,24 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Introduction
 
-This short report outlines statistical techniques which may allow as series of individual predictions from a number of workshop participants to be turned into a single model parameter. 
+This short report outlines two statistical techniques which may allow predictions from individual workshop participants to be turned into a single model parameter. 
 
-Currently the parameter is based a consensus view in the workshop. An alternative method involves collecting individual estimates and aggregating them via statistical methods to produce a parameter.
+Currently model parameters are set based on a consensus view in the workshop. An alternative method involves collecting individuals estimates and using statistical methods to produce a parameter.
 
 
 Two potential scenarios are considered in this report:
-1. Workshop participants are asked to provide a point estimate. 
-2. Workshop participants are asked to provide a range in which values may lie.
 
-The first scenario appears easy to implement. The second would most probably require some explanation like that in How to measure anything (Hubbard, 2014) and would also involve assumptions detailed in the following section. Benefits. 
+1. Workshop participants are asked to provide a point forecast for a metric. 
 
-## Details of the techinques
+1. Workshop participants are asked to provide a forecast interval for a metric.
 
-Let us cover the techniques involved in using the following example. 
+The first scenario appears easy to implement in the workshop, and methodologically simple. The second would most probably require some explanation like that in How to measure anything (Hubbard, 2014) and would also involve assumptions detailed in section 1.2. There are benefits, however for the ranges?
 
-Fifteen participants at a workshop are asked to provide point estimates. There is no way to determine what kind of distribution their estimates will form, and may vary from metric to metric. Here, for arguments sake, participants' estimates are normally distributed.
+## Point forecasts and bootstrapping
+
+A demonstration of the techniques involved in using the following example. 
+
+Fifteen participants at a workshop are asked to provide a point forecast for a given metric. It is important to note that a distribution of estimates make take any form, and that the form may also vary from metric to metric. In this example, participants' estimates are normally distributed around a mean value of 750 with a standard deviation of 20:
 
 ```{r, echo=TRUE}
 library(tidyverse)
@@ -38,62 +43,73 @@ set.seed(102)
 
 ```
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, out.width= "50%", fig.align='center'}
 tmp_df <- tibble(x = "", y = point_estimates)
 
 ggplot(tmp_df, aes(x, y))+
+  stat_boxplot(geom ='errorbar') + 
   geom_boxplot()+
-  geom_point()+
+   geom_point()+
+  scale_x_discrete(expand = c(1,1))+
   ylab("Value")
 ```
 
-We are attmepting to aggregate these 15 estimates into one parameter, and provide a measurement of uncertainty. At this stage we could consider the bootstrap method, for two reasons. One, because we cannot rely on the estimates being normally distributed, and two, because the bootstapping method can produce outcomes very similar to a consensus view (quote paper) whilst providing a recognised measure of uncertainty around the value, and takes account of larger numbers.
+The goal here is to aggregate these 15 estimates into a single estimate and a measurement of uncertainty around the single estimate. This information will be translated into a model parameter.
 
-Bootstrapping involves re-sampling for the orginal set to produce a large number of samples, each the same size as the original. A bootstrapping method may follow the steps below:
+
+At this point, we shall consider the bootstrap method, for three reasons:
+
+1. We cannot assume that our estimates would be normally distributed. The bootstrap method provides a statistically sound measure of uncertainty around a sample statistic, regardless of the distribution or, indeed, the statistic required.
+
+1. There is evidence to suggest that the bootstrap method produces outcomes very similar to a consensus view (quote paper) at a fraction of the cost.
+
+1. It replicates the effect of taking a large number of samples from the population (in this case, subject experts).
+
+Bootstrapping involves randomly sampling values from the orginal data to produce a large number of simulated samples, each the same size as the original.
+
+A bootstrapping method may follow the steps below:
+
 
 
 ```{r}
 # Find the mean and median of the set of points estimates:
-points_mean   <- mean(point_estimates)
-points_median <- median(point_estimates)
+(points_mean   <- mean(point_estimates))
+(points_median <- median(point_estimates))
+```
+
+
+```{r}
+# Create a total of 100k samples:
 
 for(i in 1:99999){
-  tmp <- sample(iq, length(iq), replace = T)
+  tmp <- sample(point_estimates, length(point_estimates), replace = T)
   
   points_mean[1 + i]   <- mean(tmp)
   points_median[1 + i] <- median(tmp)
   rm(tmp)
 }
 
-# the standard error of the sample statistic is the standard deviation of the bootstrapped data 
+
+# the standard error of the sample statistic is the standard deviation of the bootstrapped data:
 
 sd(points_mean)
-sd(points_median)
 
-# compare with estimate of standard error on original dataset (whch.
+# compare with estimate of standard error from the original data:
 sd(point_estimates) / sqrt(length(point_estimates))
 
+# The bootstrap allows is flexible enough to be applied ot a 
+# wide range of sample statistics and distributions.
 
-# but the value lies in obtaining confidence limits for a wide range of sample statistics and a wide range of distributions. These are found with:
+# We can obtain a standard error of the median:
+sd(points_median)
 
+# And confidence intervals for the mean and the median:
 quantile(points_mean  , probs = c(0.025, 0.5, 0.975))
 quantile(points_median, probs = c(0.025, 0.5, 0.975))
 
 
-
 ```
+In summary we could provide the median with the standard error around the median
+(show in LaTeX math format)
 
 
-```{r cars}
-summary(cars)
-```
-
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
