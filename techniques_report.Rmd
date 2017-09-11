@@ -1,0 +1,99 @@
+---
+title: 'Modelling: Resampling and Monte Carlo simulation'
+author: "Andrew"
+date: "11 September 2017"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+This short report outlines statistical techniques which may allow as series of individual predictions from a number of workshop participants to be turned into a single model parameter. 
+
+Currently the parameter is based a consensus view in the workshop. An alternative method involves collecting individual estimates and aggregating them via statistical methods to produce a parameter.
+
+
+Two potential scenarios are considered in this report:
+1. Workshop participants are asked to provide a point estimate. 
+2. Workshop participants are asked to provide a range in which values may lie.
+
+The first scenario appears easy to implement. The second would most probably require some explanation like that in How to measure anything (Hubbard, 2014) and would also involve assumptions detailed in the following section. Benefits. 
+
+## Details of the techinques
+
+Let us cover the techniques involved in using the following example. 
+
+Fifteen participants at a workshop are asked to provide point estimates. There is no way to determine what kind of distribution their estimates will form, and may vary from metric to metric. Here, for arguments sake, participants' estimates are normally distributed.
+
+```{r, echo=TRUE}
+library(tidyverse)
+set.seed(102)
+
+(point_estimates <- round(rnorm(15, 750, 20)))
+
+```
+
+```{r, echo=FALSE}
+tmp_df <- tibble(x = "", y = point_estimates)
+
+ggplot(tmp_df, aes(x, y))+
+  geom_boxplot()+
+  geom_point()+
+  ylab("Value")
+```
+
+We are attmepting to aggregate these 15 estimates into one parameter, and provide a measurement of uncertainty. At this stage we could consider the bootstrap method, for two reasons. One, because we cannot rely on the estimates being normally distributed, and two, because the bootstapping method can produce outcomes very similar to a consensus view (quote paper) whilst providing a recognised measure of uncertainty around the value, and takes account of larger numbers.
+
+Bootstrapping involves re-sampling for the orginal set to produce a large number of samples, each the same size as the original. A bootstrapping method may follow the steps below:
+
+
+```{r}
+# Find the mean and median of the set of points estimates:
+points_mean   <- mean(point_estimates)
+points_median <- median(point_estimates)
+
+for(i in 1:99999){
+  tmp <- sample(iq, length(iq), replace = T)
+  
+  points_mean[1 + i]   <- mean(tmp)
+  points_median[1 + i] <- median(tmp)
+  rm(tmp)
+}
+
+# the standard error of the sample statistic is the standard deviation of the bootstrapped data 
+
+sd(points_mean)
+sd(points_median)
+
+# compare with estimate of standard error on original dataset (whch.
+sd(point_estimates) / sqrt(length(point_estimates))
+
+
+# but the value lies in obtaining confidence limits for a wide range of sample statistics and a wide range of distributions. These are found with:
+
+quantile(points_mean  , probs = c(0.025, 0.5, 0.975))
+quantile(points_median, probs = c(0.025, 0.5, 0.975))
+
+
+
+```
+
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
