@@ -23,18 +23,18 @@ Currently, model parameters are based on a consensus view. An alternative method
 
 Two potential scenarios are considered in this report:
 
-1. Workshop participants are asked to provide a point forecast for a metric. 
+1. Workshop participants are asked to provide a point estimate for a metric. 
 
-1. Workshop participants are asked to provide a forecast interval for a metric.
+1. Workshop participants are asked to provide a prediction interval for a metric.
 
 The first scenario would appear easy to implement in the workshop, the  methods to process the results are equally straightforward. The second would likely require some extra explanation, possibly based on _How to measure anything_ (Hubbard, 2014). It would also involve assumptions detailed in Section 2. What are the benefits?
 
-## 1. Point forecasts: the bootstrap method
+## 1. Point estimates: the bootstrap method
 
 A demonstration of the techniques involved in using the following example. 
 Workshop participants are commonly asked to forecast reduction in activity for a given point in the future.
 
-In the following example, fifteen participants provide a *point forecast* for a given metric. It is important to note that a distribution of estimates make take any form, and that the form may also vary from metric to metric. In this example, participants' estimates are normally distributed around a mean value of 0.95, with a standard deviation of 0.02:
+In the following example, fifteen participants provide a *point estimate* for a given metric. It is important to note that a distribution of estimates make take any form, and that the form may also vary from metric to metric. In this example, participants' estimates are normally distributed around a mean value of 0.95, with a standard deviation of 0.02:
 
 
 ```{r, echo=FALSE}
@@ -120,11 +120,11 @@ In summary we could for example produce the median, the standard error around th
 
 $ 755 \pm 8 (737-769)$ 
 
-## 2. Interval forecasts: Monte Carlo simulation
+## 2. Prediciton Interval: Monte Carlo simulation
 
-The Monte Carlo method (or a similar method) is applicable if workshop participants are asked to forecast an interval.
+The Monte Carlo method (or a similar method) is applicable if workshop participants are asked to provide a prediction interval.
 
-For example Participant A may be 90% confident that activity can be  reduced by 0 to 5% (0.95 to 1 times the current rate) .
+For example, Participant A may be 90% confident that activity can be  reduced by 0 to 5% (0.95 to 1 times the current rate) .
 
 Unlike a point estimate, with an interval we will have to we will have to make assumptions about probablity of obtaining values within the interval. It is likely that participants would - knowingly or unknowingly - assume a uniform distribution over the interval. 
 
@@ -143,7 +143,12 @@ $\frac{\pm CL-\bar{x}}{1.96}=\pm sd$ ,
 
 where CL is the confidence limit.
 
-A next step might be to amalgamate the individual distributions into one. However, rather than add distributions (which appears to involve non-trivial mathematics (refer to wolfram and wiki)), it appeared reasonable to sample from each distribution in turn (one round of sampling). This process would be repeated a large number of times to produce an aggregate distribution, from which sample statistics could be calculated.
+A next step might be to amalgamate the individual distributions into one. However, rather than add distributions (which appears to involve non-trivial mathematics [^Wolfram] [^Wiki] it appeared reasonable to sample from each distribution in turn (one round of sampling). This process would be repeated a large number of times to produce an aggregate distribution, from which sample statistics could be calculated.
+
+
+[^Wolfram]: http://mathworld.wolfram.com/NormalSumDistribution.html
+
+[^Wiki]: https://en.wikipedia.org/wiki/Mixture_distribution
 
 ### Example
 
