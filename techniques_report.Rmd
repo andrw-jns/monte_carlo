@@ -1,13 +1,14 @@
 ---
-title: |   
-    |     Using Bootstrapping and
-    |     Monte Carlo simulation
-    |     to obtain model parameters
+title: |
+  |    A Quick Assessment of
+  |    the bootstrap and
+  |    Monte Carlo methods
+  |    to aid parameter setting.
 author: "Andrew"
-date: "11 September 2017"
+date: "13 September 2017"
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -16,10 +17,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Introduction
 
-This short report outlines two statistical techniques which may allow predictions from individual workshop participants to be turned into a single model parameter. 
+This short paper outlines two statistical techniques which allow predictions from individual workshop participants to be turned into a single model parameter. 
 
-Currently model parameters are set based on a consensus view in the workshop. An alternative method involves collecting individuals estimates and using statistical methods to produce a parameter.
-
+Currently, model parameters are based on a consensus view. An alternative method involves collecting individuals estimates and using statistical methods to produce a parameter.
 
 Two potential scenarios are considered in this report:
 
@@ -27,19 +27,26 @@ Two potential scenarios are considered in this report:
 
 1. Workshop participants are asked to provide a forecast interval for a metric.
 
-The first scenario appears easy to implement in the workshop, and methodologically simple. The second would most probably require some explanation like that in How to measure anything (Hubbard, 2014) and would also involve assumptions detailed in section 1.2. There are benefits, however for the ranges?
+The first scenario would appear easy to implement in the workshop, the  methods to process the results are equally straightforward. The second would likely require some extra explanation, possibly based on _How to measure anything_ (Hubbard, 2014). It would also involve assumptions detailed in Section 2. What are the benefits?
 
-## Point forecasts and bootstrapping
+## 1. Point forecasts: the bootstrap method
 
 A demonstration of the techniques involved in using the following example. 
+Workshop participants are commonly asked to forecast reduction in activity for a given point in the future.
 
-Fifteen participants at a workshop are asked to provide a point forecast for a given metric. It is important to note that a distribution of estimates make take any form, and that the form may also vary from metric to metric. In this example, participants' estimates are normally distributed around a mean value of 750 with a standard deviation of 20:
+In the following example, fifteen participants provide a *point forecast* for a given metric. It is important to note that a distribution of estimates make take any form, and that the form may also vary from metric to metric. In this example, participants' estimates are normally distributed around a mean value of 0.95, with a standard deviation of 0.02:
+
+
+```{r, echo=FALSE}
+library(tidyverse)
+suppressPackageStartupMessages(library(tidyverse))
+```
 
 ```{r, echo=TRUE}
-library(tidyverse)
+
 set.seed(102)
 
-(point_estimates <- round(rnorm(15, 750, 20)))
+(point_estimates <- round(rnorm(15, 0.95, 0.02),2))
 
 ```
 
@@ -49,26 +56,26 @@ tmp_df <- tibble(x = "", y = point_estimates)
 ggplot(tmp_df, aes(x, y))+
   stat_boxplot(geom ='errorbar') + 
   geom_boxplot()+
-   geom_point()+
+   geom_jitter(size = 3)+
   scale_x_discrete(expand = c(1,1))+
   ylab("Value")
 ```
 
-The goal here is to aggregate these 15 estimates into a single estimate and a measurement of uncertainty around the single estimate. This information will be translated into a model parameter.
+The aim is to aggregate these 15 points into a single estimate, and provide a measurement of uncertainty. This information will then be translated into a model parameter.
 
 
-At this point, we shall consider the bootstrap method, for three reasons:
+At this point, we shall consider the bootstrap method (as an alternative to simple descriptive statistics). Bootstrapping involves randomly sampling values (with replacement) from the orginal data to produce a large number of virtual samples. Each of these samples is set to be the same size as the original. 
 
-1. We cannot assume that our estimates would be normally distributed. The bootstrap method provides a statistically sound measure of uncertainty around a sample statistic, regardless of the distribution or, indeed, the statistic required.
+This method has 3 potential benefits:
 
-1. There is evidence to suggest that the bootstrap method produces outcomes very similar to a consensus view (quote paper) at a fraction of the cost.
+1. We cannot assume our estimates will be normally distributed. The bootstrap method provides a statistically sound measure of uncertainty around almost any sample statistic, regardless of the distribution.
 
 1. It replicates the effect of taking a large number of samples from the population (in this case, subject experts).
 
-Bootstrapping involves randomly sampling values from the orginal data to produce a large number of simulated samples, each the same size as the original.
+1. There is evidence to suggest that the bootstrap method can produce outcomes very similar to a consensus view (quote paper). 
+
 
 A bootstrapping method may follow the steps below:
-
 
 
 ```{r}
@@ -97,7 +104,7 @@ sd(points_mean)
 # compare with estimate of standard error from the original data:
 sd(point_estimates) / sqrt(length(point_estimates))
 
-# The bootstrap allows is flexible enough to be applied ot a 
+# The bootstrap can be applied to a 
 # wide range of sample statistics and distributions.
 
 # We can obtain a standard error of the median:
@@ -109,7 +116,95 @@ quantile(points_median, probs = c(0.025, 0.5, 0.975))
 
 
 ```
-In summary we could provide the median with the standard error around the median
-(show in LaTeX math format)
+In summary we could for example produce the median, the standard error around the median, and resulting confidence limits.
+
+$ 755 \pm 8 (737-769)$ 
+
+## 2. Interval forecasts: Monte Carlo simulation
+
+The Monte Carlo method (or a similar method) is applicable if workshop participants are asked to forecast an interval.
+
+For example Participant A may be 90% confident that activity can be  reduced by 0 to 5% (0.95 to 1 times the current rate) .
+
+Unlike a point estimate, with an interval we will have to we will have to make assumptions about probablity of obtaining values within the interval. It is likely that participants would - knowingly or unknowingly - assume a uniform distribution over the interval. 
+
+A uniform distribution dictates that all values within the range are equally possible, yet an answer outside the interval is impossible. This leaves no room for uncertainty, and may remove the reasons for intervals.
+
+A 90% confidence interval of a normal distribution would allow for the possiblity of values outside the predicted range. However, participants would- knowingly or not - be stating that the most likely outcome lay at the centre of the interval.
+
+
+### 2.1 Assuming a normal distribution
+
+Intervals will be collected from each participant. The boundaries of each interval will be the upper and lower (95%) confidence limits.
+
+We can then add the mean, $\bar{x}$, which is the middle of the interval. The standard deviation, sd, for 95% confidence limits is found with
+
+$\frac{\pm CL-\bar{x}}{1.96}=\pm sd$ ,
+
+where CL is the confidence limit.
+
+A next step might be to amalgamate the individual distributions into one. However, rather than add distributions (which appears to involve non-trivial mathematics (refer to wolfram and wiki)), it appeared reasonable to sample from each distribution in turn (one round of sampling). This process would be repeated a large number of times to produce an aggregate distribution, from which sample statistics could be calculated.
+
+### Example
+
+The following example, based on five participants, illustrates how the process might work. Participants provide interval limits. To reiterate, if we assume a normal distribution, a mean is found at the centre of each interval.
+
+```{r , echo = FALSE}
+set.seed(103)
+
+intervals <- tibble(participant = LETTERS[1:5],
+                    lcl         = seq(0, 0.04, by = 0.01),
+                    ucl         = seq(0, 0.08, by = 0.02),
+                    means       = ucl - (ucl-lcl)/2, # assume norm
+                    sdevs       = (ucl-means)/qnorm(0.975)
+                    ) 
+
+```
+
+Method 1 samples from each participant's distribution in turn (one round of sampling). This round of sampling is repeated thousands of times:
+
+```{r}
+
+meth_1 <- NULL
+
+for(i in seq(1, 100000, by = 5)){
+  meth_1[(i):(i+4)] <- pmap_dbl(list(n=1, intervals$means, intervals$sdevs), rnorm)
+}
+
+meth_1 <- tibble(estimates = meth_1)
+
+ggplot(meth_1, aes(estimates))+
+  geom_histogram()
+
+
+quantile(meth_1$estimates, probs = c(0.025, 0.5, 0.975))
+
+```
+
+The code below verifies that an idenetical distribution is created by sampling once from any distribution, and repeating this thousands of times.
+
+```{r}
+
+meth_2 <- NULL
+
+for(i in 1:50000){
+  j <- sample(1:length(intervals$participant),1)
+  meth_2[(i)] <- pmap_dbl(list(n=1,intervals$means[j], intervals$sdevs[j]), rnorm)
+  rm(j)
+}
+
+meth_2 <- tibble(estimates = meth_2)
+
+ggplot(meth_2, aes(estimates))+
+  geom_histogram()
+
+quantile(meth_2$estimates, probs = c(0.025, 0.5, 0.975))
+
+```
+
+
+NB. With both these approaches, negative prediction values (growth in activity rates) would be possible.
+
+
 
 
