@@ -141,7 +141,7 @@ NB. The same method could be applied to uniform distributions.
 
 Intervals will be collected from each participant. The boundaries of each interval will be the upper and lower (95%) confidence limits.
 
-We can then add the mean, $\bar{x}$, which is the middle of the interval. The standard deviation, sd, for 95% confidence limits is found with  
+We can then deduce the mean, $\bar{x}$, which is the middle of the interval. The standard deviation, sd, for 95% confidence limits is found with  
 
 $\frac{\pm CL-\bar{x}}{1.96}=\pm sd$ ,  
 
