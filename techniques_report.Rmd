@@ -30,7 +30,7 @@ The first scenario would appear easy to implement in the workshop, with the data
 
 ## 1. Point Estimates: The Bootstrap Method
 
-In the following example, fifteen participants provide a *point estimate* for a given metric. It is important to note that a distribution of estimates make take any form, and that the form may also vary from metric to metric. In this example, participants' estimates are normally distributed around a mean value of 0.95 (a 5% reduction), with a standard deviation of 0.02:  
+In the following example, fifteen participants provide a *point estimate* for a given metric. It is important to note that a distribution of estimates may take any form, and that the form may also vary from metric to metric. In this example, participants' estimates are normally distributed around a mean value of 0.95 (a 5% reduction), with a standard deviation of 0.02:  
   
 
 ```{r, include=FALSE}
